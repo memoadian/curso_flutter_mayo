@@ -4,6 +4,9 @@ import 'package:my_first_app/models_api/Pet.dart';
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:my_first_app/models_db/Fav.dart';
+import 'package:my_first_app/models_db/FavsHelper.dart';
+import 'package:toast/toast.dart';
 
 class PetsList extends StatefulWidget {
   @override
@@ -13,6 +16,8 @@ class PetsList extends StatefulWidget {
 class _PetsListState extends State<PetsList> {
 
   List<Pet> _pets = [];
+
+  final dbHelper = FavsHelper();
 
   FRefreshController _controller = FRefreshController();
 
@@ -30,6 +35,17 @@ class _PetsListState extends State<PetsList> {
     } else {
       throw Exception("Fallo al conectar al servidor");
     }
+  }
+
+  void _insert(String name, int age, String image) async {
+    dbHelper.saveFav(Fav(name, age.toString(), image))
+          .then((_) => {
+            Toast.show("Mascota agregada a favoritos",
+              context,
+              duration: Toast.LENGTH_SHORT,
+              gravity: Toast.BOTTOM
+            )
+          });
   }
 
   @override
@@ -69,11 +85,28 @@ class _PetsListState extends State<PetsList> {
               padding: EdgeInsets.only(top: 20),
               child: Text(_pets[index].name, style: TextStyle(fontSize: 18),),
             ),
-            ElevatedButton(
-              onPressed: () => {
-                Navigator.pushNamed(context, 'detail', arguments: {'id': _pets[index].id})
-              },
-              child: Text("Ver")
+            Container(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => {
+                      Navigator.pushNamed(
+                        context,
+                        'detail',
+                        arguments: {'id': _pets[index].id}
+                      ),
+                    },
+                    icon: Icon(Icons.remove_red_eye),
+                    label: Text("Ver")
+                  ),
+                  TextButton.icon(onPressed: () => {
+                    _insert(_pets[index].name, _pets[index].age, _pets[index].image)
+                  },
+                  icon: Icon(Icons.favorite, color: Colors.red,),
+                  label: Text("Me gusta"))
+                ],
+              ),
             ),
           ],
         ),
